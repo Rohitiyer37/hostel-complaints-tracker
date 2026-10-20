@@ -1,0 +1,48 @@
+<%- include('partials/header', { title: 'Statistics' }) %>
+<h1>Statistics</h1>
+<p class="muted">Every number on this page comes from a MongoDB aggregation pipeline. Total complaints: <strong><%= total %></strong></p>
+
+<%
+  function bars(rows, labelKey, valueKey) {
+    const max = Math.max(1, ...rows.map(r => r[valueKey]));
+    return rows.map(r => {
+      const w = Math.round((r[valueKey] / max) * 100);
+      const label = String(r[labelKey] || 'Unknown').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return '<div class="bar"><span class="bl">' + label + '</span><span class="bt"><span class="bf" style="width:' + w + '%"></span></span><span class="bv">' + r[valueKey] + '</span></div>';
+    }).join('');
+  }
+%>
+
+<div class="grid2">
+  <div class="card"><h2>Complaints by category</h2><%- bars(byCategory, '_id', 'count') || '<p class="muted">No data yet</p>' %></div>
+  <div class="card"><h2>Complaints by status</h2><%- bars(byStatus, '_id', 'count') || '<p class="muted">No data yet</p>' %></div>
+  <div class="card"><h2>Complaints per month</h2><%- bars(perMonth, '_id', 'count') || '<p class="muted">No data yet</p>' %></div>
+  <div class="card">
+    <h2>Per hostel block</h2>
+    <table>
+      <thead><tr><th>Block</th><th>Total</th><th>Still open</th></tr></thead>
+      <tbody>
+        <% byHostel.forEach(h => { %><tr><td><%= h._id %></td><td><%= h.total %></td><td><%= h.open %></td></tr><% }) %>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2>Average time to resolve</h2>
+    <% if (avgResolution.length === 0) { %><p class="muted">No resolved complaints yet</p><% } %>
+    <table>
+      <% avgResolution.forEach(a => { %>
+        <tr><td><%= a._id %></td><td><%= a.avgHours.toFixed(1) %> hours</td><td class="muted"><%= a.resolved %> resolved</td></tr>
+      <% }) %>
+    </table>
+  </div>
+  <div class="card">
+    <h2>Students with most complaints</h2>
+    <% if (topStudents.length === 0) { %><p class="muted">No data yet</p><% } %>
+    <table>
+      <% topStudents.forEach(s => { %>
+        <tr><td><%= s.name %></td><td class="muted"><%= s.roomNo || '-' %></td><td><%= s.count %></td></tr>
+      <% }) %>
+    </table>
+  </div>
+</div>
+<%- include('partials/footer') %>

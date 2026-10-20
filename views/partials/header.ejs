@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' ? title + ' | ' : '' %>Hostel Complaints</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/">Hostel Complaints</a>
+  <% if (user) { %>
+    <nav>
+      <% if (user.role === 'admin') { %>
+        <a href="/admin">All complaints</a>
+        <a href="/admin/stats">Statistics</a>
+      <% } else { %>
+        <a href="/dashboard">My complaints</a>
+        <a href="/complaints/new">New complaint</a>
+      <% } %>
+      <span class="who"><%= user.name %></span>
+      <a href="/logout">Log out</a>
+    </nav>
+  <% } %>
+</header>
+<main class="wrap">

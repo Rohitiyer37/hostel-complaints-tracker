@@ -1,0 +1,48 @@
+<%- include('partials/header', { title: 'All complaints' }) %>
+<div class="row between">
+  <h1>All complaints</h1>
+  <a class="btn ghost" href="/admin/stats">View statistics</a>
+</div>
+
+<form class="filters" method="GET" action="/admin">
+  <input type="text" name="q" value="<%= f.q %>" placeholder="Search text">
+  <select name="status">
+    <option value="">Any status</option>
+    <% ['Pending','In Progress','Resolved'].forEach(s => { %><option <%= f.status === s ? 'selected' : '' %>><%= s %></option><% }) %>
+  </select>
+  <select name="category">
+    <option value="">Any category</option>
+    <% categories.forEach(c => { %><option <%= f.category === c ? 'selected' : '' %>><%= c %></option><% }) %>
+  </select>
+  <select name="hostel">
+    <option value="">Any block</option>
+    <% hostels.forEach(h => { %><option <%= f.hostel === h ? 'selected' : '' %>><%= h %></option><% }) %>
+  </select>
+  <select name="priority">
+    <option value="">Any priority</option>
+    <% ['High','Medium','Low'].forEach(p => { %><option <%= f.priority === p ? 'selected' : '' %>><%= p %></option><% }) %>
+  </select>
+  <button class="btn ghost" type="submit">Filter</button>
+</form>
+
+<p class="muted"><%= complaints.length %> complaint(s)</p>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Title</th><th>Student</th><th>Block / Room</th><th>Category</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead>
+  <tbody>
+    <% complaints.forEach(c => { %>
+      <tr>
+        <td><a href="/complaints/<%= c._id %>"><%= c.title %></a></td>
+        <td><%= c.studentId ? c.studentId.name : 'Deleted user' %></td>
+        <td><%= c.hostel %> / <%= c.roomNo || '-' %></td>
+        <td><%= c.category %></td>
+        <td><span class="prio prio-<%= c.priority %>"><%= c.priority %></span></td>
+        <td><span class="badge s-<%= c.status.replace(' ', '') %>"><%= c.status %></span></td>
+        <td><%= c.createdAt.toLocaleDateString('en-IN') %></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>
+<%- include('partials/footer') %>

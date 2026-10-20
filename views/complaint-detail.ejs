@@ -1,0 +1,67 @@
+<%- include('partials/header', { title: complaint.title }) %>
+<div class="card">
+  <div class="row between">
+    <h1><%= complaint.title %></h1>
+    <span class="badge s-<%= complaint.status.replace(' ', '') %>"><%= complaint.status %></span>
+  </div>
+  <p class="muted">
+    <%= complaint.category %> · Priority: <%= complaint.priority %> · <%= complaint.hostel %>, Room <%= complaint.roomNo || '-' %><br>
+    Raised by <%= complaint.studentId.name %> on <%= complaint.createdAt.toLocaleString('en-IN') %>
+  </p>
+  <p><%= complaint.description %></p>
+
+  <% const extras = Object.entries(complaint.extraDetails || {}); %>
+  <% if (extras.length) { %>
+    <p class="muted">
+      <% extras.forEach(([k, v]) => { %><strong><%= k %>:</strong> <%= v %> &nbsp; <% }) %>
+    </p>
+  <% } %>
+
+  <% if (complaint.image) { %><img class="photo" src="<%= complaint.image %>" alt="Complaint photo"><% } %>
+</div>
+
+<% if (user.role === 'admin') { %>
+<div class="card">
+  <h2>Update status</h2>
+  <form class="inline" method="POST" action="/admin/complaints/<%= complaint._id %>/status">
+    <select name="status">
+      <% ['Pending','In Progress','Resolved'].forEach(s => { %>
+        <option <%= complaint.status === s ? 'selected' : '' %>><%= s %></option>
+      <% }) %>
+    </select>
+    <input type="text" name="note" placeholder="Optional note for the student">
+    <button class="btn" type="submit">Update</button>
+  </form>
+</div>
+<% } %>
+
+<div class="card">
+  <h2>Status timeline</h2>
+  <ul class="timeline">
+    <% complaint.statusHistory.forEach(h => { %>
+      <li><strong><%= h.status %></strong> <span class="muted"><%= h.at.toLocaleString('en-IN') %></span></li>
+    <% }) %>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Comments</h2>
+  <% if (complaint.comments.length === 0) { %><p class="muted">No comments yet.</p><% } %>
+  <% complaint.comments.forEach(c => { %>
+    <div class="comment <%= c.role === 'admin' ? 'by-admin' : '' %>">
+      <strong><%= c.by %></strong> <span class="muted"><%= c.role === 'admin' ? '(warden)' : '' %> <%= c.at.toLocaleString('en-IN') %></span>
+      <p><%= c.text %></p>
+    </div>
+  <% }) %>
+  <form class="inline" method="POST" action="/complaints/<%= complaint._id %>/comment">
+    <input type="text" name="text" placeholder="Write a comment" required>
+    <button class="btn" type="submit">Post comment</button>
+  </form>
+</div>
+
+<% if (user.role === 'student' && complaint.status === 'Pending') { %>
+  <form method="POST" action="/complaints/<%= complaint._id %>/delete" onsubmit="return confirm('Delete this complaint?')">
+    <button class="btn danger" type="submit">Delete complaint</button>
+  </form>
+<% } %>
+<%- include('partials/footer') %>

@@ -1,0 +1,34 @@
+<%- include('partials/header', { title: 'My complaints' }) %>
+<div class="row between">
+  <h1>My complaints</h1>
+  <a class="btn" href="/complaints/new">Raise a complaint</a>
+</div>
+
+<form class="filters" method="GET" action="/dashboard">
+  <input type="text" name="q" value="<%= q %>" placeholder="Search title or description">
+  <select name="status">
+    <option value="">All statuses</option>
+    <% ['Pending','In Progress','Resolved'].forEach(s => { %>
+      <option <%= status === s ? 'selected' : '' %>><%= s %></option>
+    <% }) %>
+  </select>
+  <button class="btn ghost" type="submit">Filter</button>
+</form>
+
+<% if (complaints.length === 0) { %>
+  <div class="card"><p>No complaints found. Raise one when something needs fixing in your room or block.</p></div>
+<% } %>
+
+<% complaints.forEach(c => { %>
+  <a class="item" href="/complaints/<%= c._id %>">
+    <div>
+      <strong><%= c.title %></strong>
+      <div class="muted"><%= c.category %> · Room <%= c.roomNo || '-' %> · <%= c.createdAt.toLocaleDateString('en-IN') %></div>
+    </div>
+    <div class="tags">
+      <span class="prio prio-<%= c.priority %>"><%= c.priority %></span>
+      <span class="badge s-<%= c.status.replace(' ', '') %>"><%= c.status %></span>
+    </div>
+  </a>
+<% }) %>
+<%- include('partials/footer') %>

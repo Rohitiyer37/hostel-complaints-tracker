@@ -3,17 +3,19 @@
   <h1>Create student account</h1>
   <% if (error) { %><p class="error"><%= error %></p><% } %>
   <form method="POST" action="/register">
-    <label>Full name <input type="text" name="name" required></label>
-    <label>College email <input type="email" name="email" required></label>
-    <label>Password (min 6 characters) <input type="password" name="password" required minlength="6"></label>
-    <label>Hostel block
-      <select name="hostel" required>
-        <option value="">Choose block</option>
-        <% hostels.forEach(h => { %><option><%= h %></option><% }) %>
-      </select>
-    </label>
-    <label>Room number <input type="text" name="roomNo" placeholder="A-204"></label>
-    <button class="btn" type="submit">Create account</button>
+    <label>Full name <input type="text" name="name" value="<%= form.name || '' %>" maxlength="60" autocomplete="name" required></label>
+    <label>College email <input type="email" name="email" value="<%= form.email || '' %>" maxlength="100" autocomplete="email" required></label>
+    <label>Password (6 to 72 characters) <input type="password" name="password" required minlength="6" maxlength="72" autocomplete="new-password"></label>
+    <div class="grid-form">
+      <label>Hostel block
+        <select name="hostel" required>
+          <option value="">Choose block</option>
+          <% HOSTELS.forEach(h => { %><option <%= form.hostel === h ? 'selected' : '' %>><%= h %></option><% }) %>
+        </select>
+      </label>
+      <label>Room number <input type="text" name="roomNo" value="<%= form.roomNo || '' %>" maxlength="12" required placeholder="A-204"></label>
+    </div>
+    <button class="btn" type="submit" data-busy="Creating account…">Create account</button>
   </form>
   <p class="muted">Already registered? <a href="/login">Log in</a></p>
 </div>

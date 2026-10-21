@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { HttpError } = require('../utils/helpers');
 
 // Checks the JWT cookie and loads the logged-in user
 exports.protect = async (req, res, next) => {
@@ -22,7 +23,7 @@ exports.protect = async (req, res, next) => {
 };
 
 exports.adminOnly = (req, res, next) => {
-  if (req.user.role !== 'admin') return res.status(403).send('Admins only');
+  if (req.user.role !== 'admin') return next(new HttpError(403, 'This page is for hostel managers only'));
   next();
 };
 

@@ -1,0 +1,13 @@
+<%- include('partials/header', { title: 'Edit ' + complaint.complaintId }) %>
+<div class="card narrow">
+  <h1>Edit complaint <span class="cid"><%= complaint.complaintId %></span></h1>
+  <p class="muted">You can change a complaint until the hostel office starts working on it.</p>
+  <% if (error) { %><p class="error"><%= error %></p><% } %>
+  <%- include('partials/complaint-form', {
+        action: '/complaints/' + complaint._id + '/edit',
+        submitLabel: 'Save changes',
+        cancelHref: '/complaints/' + complaint._id,
+        existingPhotos: complaint.images
+      }) %>
+</div>
+<%- include('partials/footer') %>

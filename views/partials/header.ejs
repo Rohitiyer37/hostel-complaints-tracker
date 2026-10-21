@@ -10,17 +10,26 @@
 <header class="topbar">
   <a class="brand" href="/">Hostel Complaints</a>
   <% if (user) { %>
+    <% const nav = (href, label) => '<a href="' + href + '"' + (path === href ? ' class="active" aria-current="page"' : '') + '>' + label + '</a>'; %>
     <nav>
       <% if (user.role === 'admin') { %>
-        <a href="/admin">All complaints</a>
-        <a href="/admin/stats">Statistics</a>
+        <%- nav('/admin', 'Complaints') %>
+        <%- nav('/admin/students', 'Students') %>
+        <%- nav('/admin/stats', 'Analytics') %>
       <% } else { %>
-        <a href="/dashboard">My complaints</a>
-        <a href="/complaints/new">New complaint</a>
+        <%- nav('/dashboard', 'My complaints') %>
+        <%- nav('/complaints/new', 'New complaint') %>
       <% } %>
+      <%- nav('/profile', 'Profile') %>
       <span class="who"><%= user.name %></span>
       <a href="/logout">Log out</a>
     </nav>
   <% } %>
 </header>
+
+<%# toast: flash message from a redirect, or the form error on this page %>
+<% const t = (typeof toast !== 'undefined' && toast) || (typeof error !== 'undefined' && error ? { type: 'error', text: error } : null); %>
+<div class="toasts" aria-live="polite">
+  <% if (t) { %><div class="toast toast-<%= t.type %>" role="status"><%= t.text %><button type="button" class="toast-x" aria-label="Dismiss">×</button></div><% } %>
+</div>
 <main class="wrap">

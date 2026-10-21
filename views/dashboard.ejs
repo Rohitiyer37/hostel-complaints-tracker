@@ -4,26 +4,52 @@
   <a class="btn" href="/complaints/new">Raise a complaint</a>
 </div>
 
+<% const countOf = (s) => (counts.find(c => c._id === s) || {}).n || 0; %>
+<% const all = counts.reduce((sum, c) => sum + c.n, 0); %>
+<div class="chips">
+  <a class="chip <%= !f.status ? 'on' : '' %>" href="/dashboard">All <strong><%= all %></strong></a>
+  <% STATUSES.forEach(s => { %>
+    <a class="chip <%= f.status === s ? 'on' : '' %>" href="/dashboard?status=<%= encodeURIComponent(s) %>"><%= s %> <strong><%= countOf(s) %></strong></a>
+  <% }) %>
+</div>
+
 <form class="filters" method="GET" action="/dashboard">
-  <input type="text" name="q" value="<%= q %>" placeholder="Search title or description">
-  <select name="status">
+  <input type="search" name="q" value="<%= f.q %>" placeholder="Search ID, title, issue or description" aria-label="Search">
+  <select name="status" aria-label="Status">
     <option value="">All statuses</option>
-    <% ['Pending','In Progress','Resolved'].forEach(s => { %>
-      <option <%= status === s ? 'selected' : '' %>><%= s %></option>
-    <% }) %>
+    <% STATUSES.forEach(s => { %><option <%= f.status === s ? 'selected' : '' %>><%= s %></option><% }) %>
   </select>
-  <button class="btn ghost" type="submit">Filter</button>
+  <select name="category" aria-label="Category">
+    <option value="">All categories</option>
+    <% CATEGORIES.forEach(c => { %><option <%= f.category === c ? 'selected' : '' %>><%= c %></option><% }) %>
+  </select>
+  <select name="sort" aria-label="Sort">
+    <% Object.entries(SORT_OPTIONS).forEach(([k, label]) => { %><option value="<%= k %>" <%= f.sort === k ? 'selected' : '' %>><%= label %></option><% }) %>
+  </select>
+  <button class="btn ghost" type="submit" data-busy="Searching…">Apply</button>
+  <% if (f.q || f.status || f.category || f.sort !== 'newest') { %><a class="btn ghost" href="/dashboard">Clear</a><% } %>
 </form>
 
 <% if (complaints.length === 0) { %>
-  <div class="card"><p>No complaints found. Raise one when something needs fixing in your room or block.</p></div>
+  <div class="card empty">
+    <% if (all === 0) { %>
+      <p><strong>You have not raised any complaints yet.</strong></p>
+      <p class="muted">Raise one when something needs fixing in your room or block.</p>
+      <a class="btn" href="/complaints/new">Raise a complaint</a>
+    <% } else if (pager.total > 0) { %>
+      <p>There is nothing on this page. <a href="<%= pager.link(1) %>">Go to the first page</a></p>
+    <% } else { %>
+      <p>No complaints match these filters.</p>
+      <a class="btn ghost" href="/dashboard">Clear filters</a>
+    <% } %>
+  </div>
 <% } %>
 
 <% complaints.forEach(c => { %>
-  <a class="item" href="/complaints/<%= c._id %>">
+  <a class="item s-border-<%= c.status.replace(' ', '') %>" href="/complaints/<%= c._id %>">
     <div>
-      <strong><%= c.title %></strong>
-      <div class="muted"><%= c.category %> · Room <%= c.roomNo || '-' %> · <%= c.createdAt.toLocaleDateString('en-IN') %></div>
+      <span class="cid"><%= c.complaintId %></span> <strong><%= c.title %></strong>
+      <div class="muted"><%= c.category %><%= c.issue && c.issue !== c.title ? ' · ' + c.issue : '' %> · <%= c.hostel %>, Room <%= c.roomNo || '-' %> · <%= c.createdAt.toLocaleDateString('en-IN') %></div>
     </div>
     <div class="tags">
       <span class="prio prio-<%= c.priority %>"><%= c.priority %></span>
@@ -31,4 +57,6 @@
     </div>
   </a>
 <% }) %>
+
+<%- include('partials/pager') %>
 <%- include('partials/footer') %>

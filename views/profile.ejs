@@ -1,0 +1,32 @@
+<%- include('partials/header', { title: 'Profile' }) %>
+<div class="card narrow">
+  <h1>Your profile</h1>
+  <p class="muted"><%= user.role === 'admin' ? 'Hostel manager' : 'Student' %> account · member since <%= user.createdAt.toLocaleDateString('en-IN') %></p>
+
+  <% if (counts.length) { %>
+    <div class="chips">
+      <% STATUSES.forEach(s => { const n = (counts.find(c => c._id === s) || {}).n || 0; %>
+        <a class="chip" href="/dashboard?status=<%= encodeURIComponent(s) %>"><%= s %> <strong><%= n %></strong></a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (error) { %><p class="error"><%= error %></p><% } %>
+  <form method="POST" action="/profile">
+    <label>Full name <input type="text" name="name" value="<%= form.name %>" maxlength="60" autocomplete="name" required></label>
+    <label>Email <input type="email" name="email" value="<%= form.email %>" maxlength="100" autocomplete="email" required></label>
+    <% if (user.role === 'student') { %>
+      <div class="grid-form">
+        <label>Hostel block
+          <select name="hostel" required>
+            <% HOSTELS.forEach(h => { %><option <%= form.hostel === h ? 'selected' : '' %>><%= h %></option><% }) %>
+          </select>
+        </label>
+        <label>Room number <input type="text" name="roomNo" value="<%= form.roomNo || '' %>" maxlength="12" required></label>
+      </div>
+      <p class="muted">Changing your room only affects new complaints.</p>
+    <% } %>
+    <button class="btn" type="submit" data-busy="Saving…">Save profile</button>
+  </form>
+</div>
+<%- include('partials/footer') %>

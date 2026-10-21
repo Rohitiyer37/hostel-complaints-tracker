@@ -1,0 +1,50 @@
+<%- include('partials/header', { title: 'Students' }) %>
+<h1>Students</h1>
+
+<form class="filters" method="GET" action="/admin/students">
+  <input type="search" name="q" value="<%= f.q %>" placeholder="Search name, email or room" aria-label="Search">
+  <select name="hostel" aria-label="Hostel block">
+    <option value="">Any block</option>
+    <% HOSTELS.forEach(h => { %><option <%= f.hostel === h ? 'selected' : '' %>><%= h %></option><% }) %>
+  </select>
+  <button class="btn ghost" type="submit" data-busy="Searching…">Search</button>
+  <% if (f.q || f.hostel) { %><a class="btn ghost" href="/admin/students">Clear</a><% } %>
+</form>
+
+<% if (students.length === 0) { %>
+  <div class="card empty">
+    <% if (pager.total > 0) { %>
+      <p>There is nothing on this page. <a href="<%= pager.link(1) %>">Go to the first page</a></p>
+    <% } else if (f.q || f.hostel) { %>
+      <p>No students match this search.</p>
+    <% } else { %>
+      <p>No students have registered yet.</p>
+    <% } %>
+  </div>
+<% } else { %>
+<div class="tablewrap">
+<table>
+  <thead>
+    <tr><th>Student</th><th>Block / Room</th><th class="num">Total</th><th class="num">Pending</th><th class="num">In progress</th><th class="num">Resolved</th><th class="num">Rejected</th><th>Last complaint</th><th></th></tr>
+  </thead>
+  <tbody>
+    <% students.forEach(s => { const st = s.stats; %>
+      <tr>
+        <td><%= s.name %><div class="muted"><%= s.email %></div></td>
+        <td><%= s.hostel %> / <%= s.roomNo || '-' %></td>
+        <td class="num"><strong><%= st.total %></strong></td>
+        <td class="num"><%= st.pending || 0 %></td>
+        <td class="num"><%= st.inProgress || 0 %></td>
+        <td class="num"><%= st.resolved || 0 %></td>
+        <td class="num"><%= st.rejected || 0 %></td>
+        <td><%= st.last ? st.last.toLocaleDateString('en-IN') : '-' %></td>
+        <td><% if (st.total) { %><a href="/admin?student=<%= s._id %>">View complaints</a><% } %></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+</div>
+<% } %>
+
+<%- include('partials/pager') %>
+<%- include('partials/footer') %>

@@ -1,0 +1,93 @@
+<%# Shared by new-complaint and edit-complaint. Needs: form, action, submitLabel, existingPhotos %>
+<form method="POST" action="<%= action %>" enctype="multipart/form-data" class="complaint-form">
+  <div class="grid-form">
+    <label>Category
+      <select name="category" id="category" required>
+        <option value="">Choose category</option>
+        <% CATEGORIES.forEach(c => { %><option <%= form.category === c ? 'selected' : '' %>><%= c %></option><% }) %>
+      </select>
+    </label>
+    <label>Issue
+      <select name="issue" id="issue" required>
+        <option value="">Choose the issue</option>
+        <% (ISSUES[form.category] || []).forEach(i => { %><option <%= form.issue === i ? 'selected' : '' %>><%= i %></option><% }) %>
+      </select>
+    </label>
+  </div>
+
+  <!-- Extra fields: shown per category (flexible schema in MongoDB) -->
+  <% Object.entries(EXTRA_FIELDS).forEach(([cat, x]) => { %>
+    <% const current = (form.extraDetails || {})[x.key]; %>
+    <label class="extra" data-for="<%= cat %>"><%= x.label %> <span class="muted">(optional)</span>
+      <select name="<%= x.key %>">
+        <option value="">Select</option>
+        <% x.options.forEach(o => { %><option <%= current === o ? 'selected' : '' %>><%= o %></option><% }) %>
+      </select>
+    </label>
+  <% }) %>
+
+  <div class="grid-form">
+    <label>Hostel block
+      <select name="hostel" required>
+        <option value="">Choose block</option>
+        <% HOSTELS.forEach(h => { %><option <%= form.hostel === h ? 'selected' : '' %>><%= h %></option><% }) %>
+      </select>
+    </label>
+    <label>Room number <input type="text" name="roomNo" value="<%= form.roomNo || '' %>" maxlength="12" required placeholder="A-204"></label>
+  </div>
+
+  <label>Short title <span class="muted">(optional, defaults to the issue)</span>
+    <input type="text" name="title" maxlength="100" value="<%= form.title && form.title !== form.issue ? form.title : '' %>" placeholder="Fan makes noise and stops">
+  </label>
+  <label>Description
+    <textarea name="description" rows="5" minlength="10" maxlength="1000" required data-counter placeholder="What is wrong, since when, and anything the staff should know"><%= form.description || '' %></textarea>
+  </label>
+  <label>Priority
+    <select name="priority">
+      <% PRIORITIES.forEach(p => { %><option <%= (form.priority || 'Medium') === p ? 'selected' : '' %>><%= p %></option><% }) %>
+    </select>
+  </label>
+
+  <% if (existingPhotos.length) { %>
+    <fieldset class="photos-edit">
+      <legend>Current photos <span class="muted">(tick to remove)</span></legend>
+      <div class="gallery">
+        <% existingPhotos.forEach(p => { %>
+          <label class="thumb"><img src="<%= p %>" alt="Complaint photo"><span><input type="checkbox" name="removePhotos" value="<%= p %>" class="remove-photo"> Remove</span></label>
+        <% }) %>
+      </div>
+    </fieldset>
+  <% } %>
+
+  <label>Photos <span class="muted">(optional, up to <%= MAX_PHOTOS %> in total, max 2 MB each)</span>
+    <input type="file" name="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple
+           data-max="<%= MAX_PHOTOS %>" data-existing="<%= existingPhotos.length %>">
+    <span class="field-hint" aria-live="polite"></span>
+  </label>
+
+  <div class="row">
+    <button class="btn" type="submit" data-busy="Saving…"><%= submitLabel %></button>
+    <a class="btn ghost" href="<%= typeof cancelHref !== 'undefined' ? cancelHref : '/dashboard' %>">Cancel</a>
+  </div>
+</form>
+<script>
+  // Issue list and extra field follow the chosen category
+  (function () {
+    const ISSUES = <%- JSON.stringify(ISSUES) %>;
+    const cat = document.getElementById('category');
+    const issue = document.getElementById('issue');
+    function refresh(keepIssue) {
+      const chosen = keepIssue ? issue.value : '';
+      issue.innerHTML = '<option value="">Choose the issue</option>';
+      (ISSUES[cat.value] || []).forEach(function (i) {
+        const o = new Option(i, i, false, i === chosen);
+        issue.add(o);
+      });
+      document.querySelectorAll('.extra').forEach(function (el) {
+        el.style.display = el.dataset.for === cat.value ? 'block' : 'none';
+      });
+    }
+    cat.addEventListener('change', function () { refresh(false); });
+    refresh(true);
+  })();
+</script>

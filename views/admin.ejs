@@ -1,48 +1,81 @@
 <%- include('partials/header', { title: 'All complaints' }) %>
 <div class="row between">
   <h1>All complaints</h1>
-  <a class="btn ghost" href="/admin/stats">View statistics</a>
+  <a class="btn ghost" href="/admin/stats">View analytics</a>
 </div>
 
+<% if (student) { %>
+  <p class="chips"><span class="chip on">Student: <%= student.name %></span> <a href="/admin">Show everyone</a></p>
+<% } %>
+
 <form class="filters" method="GET" action="/admin">
-  <input type="text" name="q" value="<%= f.q %>" placeholder="Search text">
-  <select name="status">
+  <% if (f.student) { %><input type="hidden" name="student" value="<%= f.student %>"><% } %>
+  <input type="search" name="q" value="<%= f.q %>" placeholder="Search ID, title, issue or description" aria-label="Search">
+  <select name="status" aria-label="Status">
     <option value="">Any status</option>
-    <% ['Pending','In Progress','Resolved'].forEach(s => { %><option <%= f.status === s ? 'selected' : '' %>><%= s %></option><% }) %>
+    <% STATUSES.forEach(s => { %><option <%= f.status === s ? 'selected' : '' %>><%= s %></option><% }) %>
   </select>
-  <select name="category">
+  <select name="category" aria-label="Category">
     <option value="">Any category</option>
-    <% categories.forEach(c => { %><option <%= f.category === c ? 'selected' : '' %>><%= c %></option><% }) %>
+    <% CATEGORIES.forEach(c => { %><option <%= f.category === c ? 'selected' : '' %>><%= c %></option><% }) %>
   </select>
-  <select name="hostel">
-    <option value="">Any block</option>
-    <% hostels.forEach(h => { %><option <%= f.hostel === h ? 'selected' : '' %>><%= h %></option><% }) %>
+  <select name="issue" aria-label="Issue">
+    <option value="">Any issue</option>
+    <% CATEGORIES.forEach(c => { %>
+      <optgroup label="<%= c %>">
+        <% ISSUES[c].forEach(i => { %><option <%= f.issue === i && (!f.category || f.category === c) ? 'selected' : '' %>><%= i %></option><% }) %>
+      </optgroup>
+    <% }) %>
   </select>
-  <select name="priority">
+  <select name="priority" aria-label="Priority">
     <option value="">Any priority</option>
-    <% ['High','Medium','Low'].forEach(p => { %><option <%= f.priority === p ? 'selected' : '' %>><%= p %></option><% }) %>
+    <% PRIORITIES.forEach(p => { %><option <%= f.priority === p ? 'selected' : '' %>><%= p %></option><% }) %>
   </select>
-  <button class="btn ghost" type="submit">Filter</button>
+  <select name="hostel" aria-label="Hostel block">
+    <option value="">Any block</option>
+    <% HOSTELS.forEach(h => { %><option <%= f.hostel === h ? 'selected' : '' %>><%= h %></option><% }) %>
+  </select>
+  <label class="date">From <input type="date" name="from" value="<%= f.from %>"></label>
+  <label class="date">To <input type="date" name="to" value="<%= f.to %>"></label>
+  <select name="sort" aria-label="Sort">
+    <% Object.entries(SORT_OPTIONS).forEach(([k, label]) => { %><option value="<%= k %>" <%= f.sort === k ? 'selected' : '' %>><%= label %></option><% }) %>
+  </select>
+  <button class="btn ghost" type="submit" data-busy="Filtering…">Filter</button>
+  <a class="btn ghost" href="/admin">Clear</a>
 </form>
 
-<p class="muted"><%= complaints.length %> complaint(s)</p>
-
+<% if (complaints.length === 0) { %>
+  <div class="card empty">
+    <% if (pager.total > 0) { %>
+      <p>There is nothing on this page. <a href="<%= pager.link(1) %>">Go to the first page</a></p>
+    <% } else { %>
+      <p>No complaints match these filters.</p>
+    <% } %>
+  </div>
+<% } else { %>
 <div class="tablewrap">
 <table>
-  <thead><tr><th>Title</th><th>Student</th><th>Block / Room</th><th>Category</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead>
+  <thead><tr><th>ID</th><th>Complaint</th><th>Student</th><th>Block / Room</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Date</th></tr></thead>
   <tbody>
     <% complaints.forEach(c => { %>
       <tr>
-        <td><a href="/complaints/<%= c._id %>"><%= c.title %></a></td>
-        <td><%= c.studentId ? c.studentId.name : 'Deleted user' %></td>
+        <td><a class="cid" href="/complaints/<%= c._id %>"><%= c.complaintId %></a></td>
+        <td><a href="/complaints/<%= c._id %>"><%= c.title %></a><div class="muted"><%= c.category %><%= c.issue && c.issue !== c.title ? ' · ' + c.issue : '' %></div></td>
+        <td>
+          <% if (c.student) { %><%= c.student.name %><div class="muted"><%= c.student.email %></div>
+          <% } else { %><span class="muted">Deleted user</span><% } %>
+        </td>
         <td><%= c.hostel %> / <%= c.roomNo || '-' %></td>
-        <td><%= c.category %></td>
         <td><span class="prio prio-<%= c.priority %>"><%= c.priority %></span></td>
         <td><span class="badge s-<%= c.status.replace(' ', '') %>"><%= c.status %></span></td>
+        <td><%= c.assignedTo || '-' %></td>
         <td><%= c.createdAt.toLocaleDateString('en-IN') %></td>
       </tr>
     <% }) %>
   </tbody>
 </table>
 </div>
+<% } %>
+
+<%- include('partials/pager') %>
 <%- include('partials/footer') %>

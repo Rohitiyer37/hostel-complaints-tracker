@@ -1,0 +1,12 @@
+<%- include('partials/header', { title: status === 404 ? 'Not found' : 'Error' }) %>
+<div class="card narrow empty">
+  <p class="error-code"><%= status %></p>
+  <h1><%= message %></h1>
+  <p class="muted">
+    <% if (status === 403) { %>You do not have access to this page.
+    <% } else if (status === 404) { %>It may have been deleted, or the link is wrong.
+    <% } else { %>If this keeps happening, please contact the hostel office.<% } %>
+  </p>
+  <a class="btn" href="/">Go to my home page</a>
+</div>
+<%- include('partials/footer') %>

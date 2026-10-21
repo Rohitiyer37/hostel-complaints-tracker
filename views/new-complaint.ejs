@@ -2,42 +2,6 @@
 <div class="card narrow">
   <h1>Raise a complaint</h1>
   <% if (error) { %><p class="error"><%= error %></p><% } %>
-  <form method="POST" action="/complaints" enctype="multipart/form-data">
-    <label>Category
-      <select name="category" id="category" required>
-        <option value="">Choose category</option>
-        <% categories.forEach(c => { %><option><%= c %></option><% }) %>
-      </select>
-    </label>
-
-    <!-- Extra fields: shown per category (flexible schema in MongoDB) -->
-    <label class="extra" data-for="Plumbing">Water source
-      <select name="waterSource"><option value="">Select</option><option>Tap</option><option>Shower</option><option>Toilet</option><option>Water cooler</option></select>
-    </label>
-    <label class="extra" data-for="Electrical">Appliance
-      <select name="applianceType"><option value="">Select</option><option>Fan</option><option>Light</option><option>Switch board</option><option>Geyser</option></select>
-    </label>
-    <label class="extra" data-for="Internet">Problem
-      <select name="speedIssue"><option value="">Select</option><option>No connection</option><option>Slow speed</option><option>Keeps disconnecting</option></select>
-    </label>
-
-    <label>Title <input type="text" name="title" maxlength="100" required placeholder="Fan not working"></label>
-    <label>Description <textarea name="description" rows="4" required></textarea></label>
-    <label>Priority
-      <select name="priority"><option>Low</option><option selected>Medium</option><option>High</option></select>
-    </label>
-    <label>Photo (optional, max 2 MB) <input type="file" name="image" accept="image/*"></label>
-    <button class="btn" type="submit">Submit complaint</button>
-  </form>
+  <%- include('partials/complaint-form', { action: '/complaints', submitLabel: 'Submit complaint', existingPhotos: [] }) %>
 </div>
-<script>
-  const sel = document.getElementById('category');
-  function showExtra() {
-    document.querySelectorAll('.extra').forEach(el => {
-      el.style.display = el.dataset.for === sel.value ? 'block' : 'none';
-    });
-  }
-  sel.addEventListener('change', showExtra);
-  showExtra();
-</script>
 <%- include('partials/footer') %>

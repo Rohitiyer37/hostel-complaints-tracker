@@ -1,46 +1,63 @@
-<%- include('partials/header', { title: 'Statistics' }) %>
-<h1>Statistics</h1>
-<p class="muted">Every number on this page comes from a MongoDB aggregation pipeline. Total complaints: <strong><%= total %></strong></p>
+<%- include('partials/header', { title: 'Analytics' }) %>
+<h1>Analytics</h1>
+<p class="muted">Every number on this page comes from a single MongoDB aggregation pipeline ($facet).</p>
 
 <%
-  function bars(rows, labelKey, valueKey) {
+  function bars(rows, labelKey, valueKey, hrefFor) {
     const max = Math.max(1, ...rows.map(r => r[valueKey]));
+    const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     return rows.map(r => {
       const w = Math.round((r[valueKey] / max) * 100);
-      const label = String(r[labelKey] || 'Unknown').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      return '<div class="bar"><span class="bl">' + label + '</span><span class="bt"><span class="bf" style="width:' + w + '%"></span></span><span class="bv">' + r[valueKey] + '</span></div>';
+      const label = esc(r[labelKey] || 'Unknown');
+      const text = hrefFor ? '<a href="' + esc(hrefFor(r)) + '">' + label + '</a>' : label;
+      return '<div class="bar"><span class="bl" title="' + label + '">' + text + '</span><span class="bt"><span class="bf" style="width:' + w + '%"></span></span><span class="bv">' + r[valueKey] + '</span></div>';
     }).join('');
   }
+  const none = '<p class="muted">No data yet</p>';
+  const link = (key) => (r) => '/admin?' + key + '=' + encodeURIComponent(r._id);
 %>
 
+<div class="kpis">
+  <div class="kpi"><span>Total complaints</span><strong><%= totals.total %></strong></div>
+  <div class="kpi"><span>Open</span><strong><%= totals.open %></strong></div>
+  <div class="kpi"><span>Resolved</span><strong><%= totals.resolved %></strong></div>
+  <div class="kpi"><span>Rejected</span><strong><%= totals.rejected %></strong></div>
+  <div class="kpi"><span>Avg. time to resolve</span><strong><%= totals.avgHours != null ? totals.avgHours.toFixed(1) + ' h' : '-' %></strong></div>
+  <div class="kpi"><span>Registered students</span><strong><%= students %></strong></div>
+</div>
+
 <div class="grid2">
-  <div class="card"><h2>Complaints by category</h2><%- bars(byCategory, '_id', 'count') || '<p class="muted">No data yet</p>' %></div>
-  <div class="card"><h2>Complaints by status</h2><%- bars(byStatus, '_id', 'count') || '<p class="muted">No data yet</p>' %></div>
-  <div class="card"><h2>Complaints per month</h2><%- bars(perMonth, '_id', 'count') || '<p class="muted">No data yet</p>' %></div>
+  <div class="card"><h2>By status</h2><%- totals.total ? bars(byStatus, '_id', 'count', link('status')) : none %></div>
+  <div class="card"><h2>By priority</h2><%- totals.total ? bars(byPriority, '_id', 'count', link('priority')) : none %></div>
+  <div class="card"><h2>By category</h2><%- bars(byCategory, '_id', 'count', link('category')) || none %></div>
+  <div class="card"><h2>Top issues</h2><div class="wide-labels"><%- bars(byIssue, 'label', 'count') || none %></div></div>
+  <div class="card"><h2>Complaints per month</h2><%- bars(perMonth, '_id', 'count') || none %></div>
   <div class="card">
     <h2>Per hostel block</h2>
+    <% if (byHostel.length === 0) { %><%- none %><% } else { %>
     <table>
-      <thead><tr><th>Block</th><th>Total</th><th>Still open</th></tr></thead>
+      <thead><tr><th>Block</th><th class="num">Total</th><th class="num">Still open</th></tr></thead>
       <tbody>
-        <% byHostel.forEach(h => { %><tr><td><%= h._id %></td><td><%= h.total %></td><td><%= h.open %></td></tr><% }) %>
+        <% byHostel.forEach(h => { %><tr><td><a href="/admin?hostel=<%= encodeURIComponent(h._id || '') %>"><%= h._id || 'Unknown' %></a></td><td class="num"><%= h.total %></td><td class="num"><%= h.open %></td></tr><% }) %>
       </tbody>
     </table>
+    <% } %>
   </div>
   <div class="card">
-    <h2>Average time to resolve</h2>
+    <h2>Average time to resolve, per block</h2>
     <% if (avgResolution.length === 0) { %><p class="muted">No resolved complaints yet</p><% } %>
     <table>
       <% avgResolution.forEach(a => { %>
-        <tr><td><%= a._id %></td><td><%= a.avgHours.toFixed(1) %> hours</td><td class="muted"><%= a.resolved %> resolved</td></tr>
+        <tr><td><%= a._id || 'Unknown' %></td><td><%= a.avgHours.toFixed(1) %> hours</td><td class="muted"><%= a.resolved %> resolved</td></tr>
       <% }) %>
     </table>
   </div>
   <div class="card">
     <h2>Students with most complaints</h2>
-    <% if (topStudents.length === 0) { %><p class="muted">No data yet</p><% } %>
+    <% if (topStudents.length === 0) { %><%- none %><% } %>
     <table>
       <% topStudents.forEach(s => { %>
-        <tr><td><%= s.name %></td><td class="muted"><%= s.roomNo || '-' %></td><td><%= s.count %></td></tr>
+        <tr><td><a href="/admin?student=<%= s._id %>"><%= s.name %></a></td><td class="muted"><%= s.roomNo || '-' %></td><td class="num"><%= s.count %></td></tr>
       <% }) %>
     </table>
   </div>

@@ -1,0 +1,12 @@
+<% if (pager.total > 0) { %>
+<nav class="pager" aria-label="Pages">
+  <span class="muted">Showing <%= pager.from %>–<%= pager.to %> of <%= pager.total %></span>
+  <% if (pager.pages > 1) { %>
+    <div class="pages">
+      <% if (pager.page > 1) { %><a class="btn ghost sm" href="<%= pager.link(pager.page - 1) %>">‹ Previous</a><% } %>
+      <span>Page <%= pager.page %> of <%= pager.pages %></span>
+      <% if (pager.page < pager.pages) { %><a class="btn ghost sm" href="<%= pager.link(pager.page + 1) %>">Next ›</a><% } %>
+    </div>
+  <% } %>
+</nav>
+<% } %>
